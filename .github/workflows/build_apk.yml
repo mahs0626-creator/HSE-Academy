@@ -1,24 +1,44 @@
-name: Build Android APK
+name: Build HSE Academy APK
+
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Create Android platform if missing
+
+      - name: Check Flutter version
+        run: flutter --version
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Check APK file
         run: |
-          if [ ! -d android ]; then flutter create --platforms=android --project-name hse_academy .; fi
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter build apk --release
-      - uses: actions/upload-artifact@v4
+          ls -lh build/app/outputs/flutter-apk/
+          test -f build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: hse-academy-release-apk
+          name: HSE-Academy-APK
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
